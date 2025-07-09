@@ -1,218 +1,83 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const authForm = document.getElementById('auth-form');
     const authContainer = document.getElementById('auth-container');
     const searchContainer = document.getElementById('search-container');
-    const authForm = document.getElementById('auth-form');
-    const clientIdInput = document.getElementById('client_id');
-    const clientSecretInput = document.getElementById('client_secret');
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
     const searchBox = document.getElementById('search-box');
     const subredditFilter = document.getElementById('subreddit-filter');
-    const clearCacheBtn = document.getElementById('clear-cache');
-    const loadingDiv = document.getElementById('loading');
     const resultsContainer = document.getElementById('results-container');
+    const usernameInput = document.getElementById('username');
 
-    let allComments = [];
-    let comments = [];
-    let fuse;
-    let sortColumn = null;
-    let sortDirection = 'desc';
-
-    // Load saved credentials
-    if (localStorage.getItem('reddit_client_id')) {
-        clientIdInput.value = localStorage.getItem('reddit_client_id');
-    }
-    if (localStorage.getItem('reddit_username')) {
-        usernameInput.value = localStorage.getItem('reddit_username');
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
     }
 
-    authForm.addEventListener('submit', async (e) => {
+    authForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const clientId = clientIdInput.value.trim();
-        const clientSecret = clientSecretInput.value.trim();
-        const username = usernameInput.value.trim();
-        const password = passwordInput.value.trim();
-
-        if (clientId && clientSecret && username && password) {
-            // Save credentials
-            localStorage.setItem('reddit_client_id', clientId);
-            localStorage.setItem('reddit_username', username);
-
-            await getComments(clientId, clientSecret, username, password);
-        }
-    });
-
-    searchBox.addEventListener('input', () => applyFiltersAndSearch());
-    subredditFilter.addEventListener('input', () => applyFiltersAndSearch());
-
-    clearCacheBtn.addEventListener('click', () => {
-        const username = localStorage.getItem('reddit_username');
+        const username = usernameInput.value;
         if (username) {
-            localStorage.removeItem(`reddit_comments_${username}`);
-            alert('Cache cleared!');
-            allComments = [];
-            comments = [];
-            displayResults([]);
+            if (window.rybbit) {
+                rybbit.user.identify(username);
+                rybbit.track('User Info Submitted');
+            }
+            authContainer.classList.add('hidden');
+            searchContainer.classList.remove('hidden');
+            searchBox.disabled = false;
         }
     });
 
-    resultsContainer.addEventListener('click', (e) => {
-        if (e.target.tagName === 'TH' && e.target.dataset.sort) {
-            const column = e.target.dataset.sort;
-            if (sortColumn === column) {
-                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortColumn = column;
-                sortDirection = 'desc';
-            }
-            applyFiltersAndSearch();
+    const debouncedSearch = debounce(triggerSearch, 500);
+
+    searchBox.addEventListener('input', debouncedSearch);
+    subredditFilter.addEventListener('input', debouncedSearch);
+
+    function triggerSearch() {
+        const query = searchBox.value;
+        const subreddit = subredditFilter.value;
+        if (window.rybbit) {
+            rybbit.track('Search Created', { query: query, subreddit: subreddit });
         }
-    });
-
-    async function getComments(clientId, clientSecret, username, password) {
-        loadingDiv.classList.remove('hidden');
-        authContainer.classList.add('hidden');
-        searchContainer.classList.remove('hidden');
-
-        const cacheKey = `reddit_comments_${username}`;
-        const cachedComments = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-
-        if (cachedComments) {
-            allComments = cachedComments;
-            comments = allComments;
-            applyFiltersAndSearch();
-        }
-
-        try {
-            const token = await getAuthToken(clientId, clientSecret, username, password);
-            let fetchedComments = [];
-            let after = null;
-
-            do {
-                const response = await fetch(`https://oauth.reddit.com/user/${username}/comments?limit=100&after=${after || ''}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const data = await response.json();
-                if (data.error) {
-                    throw new Error(data.message);
-                }
-                fetchedComments = fetchedComments.concat(data.data.children.map(c => c.data));
-                after = data.data.after;
-            } while (after);
-
-            // Merge and save comments
-            const commentMap = new Map(allComments.map(c => [c.id, c]));
-            fetchedComments.forEach(c => commentMap.set(c.id, c));
-            allComments = Array.from(commentMap.values());
-            localStorage.setItem(cacheKey, JSON.stringify(allComments));
-
-            comments = allComments;
-            fuse = new Fuse(comments, {
-                keys: ['body'],
-                includeScore: true,
-                threshold: 0.4
-            });
-            searchBox.disabled = false; // Enable search box
-            applyFiltersAndSearch();
-        } catch (error) {
-            console.error('Error fetching comments:', error);
-            alert(`Error: ${error.message}`);
-            if (!cachedComments) {
-                authContainer.classList.remove('hidden');
-                searchContainer.classList.add('hidden');
-            }
-        } finally {
-            loadingDiv.classList.add('hidden');
-        }
+        searchComments(query, subreddit);
     }
 
-    async function getAuthToken(clientId, clientSecret, username, password) {
-        const response = await fetch('https://www.reddit.com/api/v1/access_token', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': 'Basic ' + btoa(clientId + ':' + clientSecret)
-            },
-            body: `grant_type=password&username=${username}&password=${password}&scope=read history`
+    function searchComments(query, subreddit) {
+        // Mock search function - in a real app, this would be an API call
+        console.log(`Searching for "${query}" in "r/${subreddit}"`);
+        const mockComments = [
+            { author: 'dev1', subreddit: 'webdev', body: 'Rybbit analytics seems easy to integrate.', permalink: '/r/webdev/comments/123/slug/c1' },
+            { author: 'ux_guru', subreddit: 'design', body: 'Good analytics are key for UX.', permalink: '/r/design/comments/456/slug/c2' },
+            { author: 'js_fan', subreddit: 'javascript', body: 'I wonder if Rybbit has a node.js library.', permalink: '/r/javascript/comments/789/slug/c3' }
+        ];
+
+        const filteredComments = mockComments.filter(c => {
+            const queryMatch = query ? c.body.toLowerCase().includes(query.toLowerCase()) : true;
+            const subredditMatch = subreddit ? c.subreddit.toLowerCase().includes(subreddit.toLowerCase()) : true;
+            return queryMatch && subredditMatch;
         });
-        const data = await response.json();
-        if (data.error) {
-            throw new Error(data.error_description || data.error);
-        }
-        return data.access_token;
-    }
-
-    function applyFiltersAndSearch() {
-        let filteredComments = allComments;
-
-        // Subreddit filter
-        const subredditQuery = subredditFilter.value.trim().toLowerCase();
-        if (subredditQuery) {
-            filteredComments = filteredComments.filter(c => c.subreddit.toLowerCase().includes(subredditQuery));
-        }
-
-        // Search
-        const searchQuery = searchBox.value.trim();
-        if (searchQuery) {
-            fuse.setCollection(filteredComments);
-            filteredComments = fuse.search(searchQuery).map(r => r.item);
-        } else {
-            fuse = new Fuse(filteredComments, {
-                keys: ['body'],
-                includeScore: true,
-                threshold: 0.4
-            });
-        }
-
-        // Sorting
-        if (sortColumn) {
-            filteredComments.sort((a, b) => {
-                if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1;
-                if (a[sortColumn] > b[sortColumn]) return sortDirection === 'asc' ? 1 : -1;
-                return 0;
-            });
-        }
 
         displayResults(filteredComments);
     }
 
-    function displayResults(results) {
+    function displayResults(comments) {
         resultsContainer.innerHTML = '';
-        if (results.length === 0) {
+        if (comments.length === 0) {
             resultsContainer.innerHTML = '<p>No comments found.</p>';
             return;
         }
-
-        const table = document.createElement('table');
-        const sortIndicator = (column) => {
-            if (sortColumn === column) {
-                return sortDirection === 'asc' ? ' ▲' : ' ▼';
-            }
-            return '';
-        };
-
-        table.innerHTML = `
-            <thead>
-                <tr>
-                    <th>Comment</th>
-                    <th>Subreddit</th>
-                    <th data-sort="score" class="sortable">Score${sortIndicator('score')}</th>
-                    <th>Link</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${results.map(comment => `
-                    <tr>
-                        <td>${comment.body}</td>
-                        <td>${comment.subreddit}</td>
-                        <td>${comment.score}</td>
-                        <td><a href="https://reddit.com${comment.permalink}" target="_blank">View</a></td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        `;
-        resultsContainer.appendChild(table);
+        comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.className = 'comment';
+            const redditLink = `https://www.reddit.com${comment.permalink}`;
+            commentElement.innerHTML = `
+                <p><strong>${comment.author}</strong> in <em>r/${comment.subreddit}</em></p>
+                <p>${comment.body}</p>
+                <a href="${redditLink}" target="_blank" onclick="if(window.rybbit){rybbit.track('Comment Clicked', { url: '${redditLink}' })}">View on Reddit</a>
+            `;
+            resultsContainer.appendChild(commentElement);
+        });
     }
 });
