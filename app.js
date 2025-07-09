@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsContainer = document.getElementById('results-container');
     const usernameInput = document.getElementById('username');
 
+    const loader = document.getElementById('loader');
+
     function debounce(func, delay) {
         let timeout;
         return function(...args) {
@@ -19,14 +21,24 @@ document.addEventListener('DOMContentLoaded', () => {
     authForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const username = usernameInput.value;
+        const loginButton = authForm.querySelector('button');
+
         if (username) {
-            if (window.rybbit) {
-                rybbit.user.identify(username);
-                rybbit.track('User Info Submitted');
-            }
-            authContainer.classList.add('hidden');
-            searchContainer.classList.remove('hidden');
-            searchBox.disabled = false;
+            loginButton.disabled = true;
+            loader.classList.remove('hidden');
+
+            // Simulate a network request
+            setTimeout(() => {
+                if (window.rybbit) {
+                    rybbit.user.identify(username);
+                    rybbit.track('User Info Submitted');
+                }
+                authContainer.classList.add('hidden');
+                searchContainer.classList.remove('hidden');
+                searchBox.disabled = false;
+                loader.classList.add('hidden');
+                loginButton.disabled = false;
+            }, 1500);
         }
     });
 
