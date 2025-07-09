@@ -1,6 +1,4 @@
-# 🔍 Reddit Comment Search (But Better)
-
-Hey there. 👋
+# Reddit Comment Search (But Better)
 
 I got tired of Reddit's half-baked search tools. You know the ones—painfully slow, borderline useless for finding *your own* old comments, and definitely not something you'd call "pleasant to use." After one too many late-night rabbit holes trying to dig up that *one clever thing I said in r/AskHistorians*, I snapped and built this.
 
@@ -8,7 +6,7 @@ I got tired of Reddit's half-baked search tools. You know the ones—painfully s
 
 ---
 
-## 🛠 What It Does
+##  What It Does
 
 - Authenticates via Reddit's **OAuth2 API** (you paste in your token info)
 - Fetches **your entire comment history**
@@ -23,13 +21,13 @@ All processing happens **locally in your browser**. Your credentials and comment
 
 ---
 
-## ✨ Why I Built It
+##  Why I Built It
 
 Because Reddit’s search is allergic to usefulness, and I wanted a fast, private, one-click way to find things I *know* I said. Also: I like excuses to avoid doing real work.
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 1. [Create a Reddit app](https://www.reddit.com/prefs/apps) with "script" access
 2. Grab your:
@@ -43,7 +41,7 @@ Because Reddit’s search is allergic to usefulness, and I wanted a fast, privat
 
 ---
 
-## 📦 Tech Stack
+##  Tech Stack
 
 - Vanilla **HTML/CSS/JS**
 - **Fuse.js** for fuzzy search
@@ -52,7 +50,7 @@ Because Reddit’s search is allergic to usefulness, and I wanted a fast, privat
 
 ---
 
-## 🔐 Privacy Notes
+##  Privacy Notes
 
 - Your credentials are only sent directly to Reddit to get a token
 - Comments are cached locally with `localStorage`
@@ -60,14 +58,14 @@ Because Reddit’s search is allergic to usefulness, and I wanted a fast, privat
 
 ---
 
-## 🧪 Live Demo / Deployment
+##  Live Demo / Deployment
 
 This site is 100% static and deploys via GitHub Pages.  
 To try it yourself:
 - Fork the repo
 - Enable Pages in the repo settings
 - Or just open `index.html` locally in a browser
-
+- Also runs here: https://cdmerchant13.github.io/redditcommentsearch/
 ---
 
 ## 🙃 Final Thought
