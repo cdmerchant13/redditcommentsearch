@@ -40,19 +40,37 @@ document.addEventListener('DOMContentLoaded', () => {
             loginButton.disabled = true;
             loader.classList.remove('hidden');
 
+<<<<<<< Updated upstream
             // Simulate a network request
             setTimeout(() => {
                 // Save API details to localStorage
                 localStorage.setItem('redditClientId', clientIdInput.value);
                 localStorage.setItem('redditClientSecret', clientSecretInput.value);
+=======
+            try {
+                const response = await fetch('http://localhost:3000/authenticate', { // Point to proxy
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json' // Send as JSON to proxy
+                    },
+                    body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, username: username, password: password })
+                });
+>>>>>>> Stashed changes
 
                 if (window.rybbit) {
                     rybbit.user.identify(username);
                     rybbit.track('User Info Submitted');
                 }
+<<<<<<< Updated upstream
                 authContainer.classList.add('hidden');
                 searchContainer.classList.remove('hidden');
                 searchBox.disabled = false;
+=======
+            } catch (error) {
+                console.error('Authentication error:', error);
+                alert(`An error occurred during authentication: ${error.message}. Please ensure the proxy server is running.`);
+            } finally {
+>>>>>>> Stashed changes
                 loader.classList.add('hidden');
                 loginButton.disabled = false;
             }, 1500);
@@ -82,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { author: 'js_fan', subreddit: 'javascript', body: 'I wonder if Rybbit has a node.js library.', permalink: '/r/javascript/comments/789/slug/c3' }
         ];
 
+<<<<<<< Updated upstream
         const filteredComments = mockComments.filter(c => {
             const queryMatch = query ? c.body.toLowerCase().includes(query.toLowerCase()) : true;
             const subredditMatch = subreddit ? c.subreddit.toLowerCase().includes(subreddit.toLowerCase()) : true;
@@ -89,6 +108,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         displayResults(filteredComments);
+=======
+        const username = usernameInput.value;
+        try {
+            const response = await fetch(`http://localhost:3000/user-comments/${username}`, { // Point to proxy
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+
+            updateRateLimitUI(response.headers);
+
+            const data = await response.json();
+            const comments = data.data.children.map(c => c.data);
+
+            const filteredComments = comments.filter(c => {
+                const queryMatch = query ? c.body.toLowerCase().includes(query.toLowerCase()) : true;
+                const subredditMatch = subreddit ? c.subreddit.toLowerCase().includes(subreddit.toLowerCase()) : true;
+                return queryMatch && subredditMatch;
+            });
+
+            displayResults(filteredComments);
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+            alert(`An error occurred while fetching comments: ${error.message}. Please ensure the proxy server is running.`);
+        }
+>>>>>>> Stashed changes
     }
 
     function displayResults(comments) {
@@ -109,4 +154,17 @@ document.addEventListener('DOMContentLoaded', () => {
             resultsContainer.appendChild(commentElement);
         });
     }
+<<<<<<< Updated upstream
+=======
+
+    function updateRateLimitUI(headers) {
+        const used = headers.get('x-ratelimit-used');
+        const remaining = headers.get('x-ratelimit-remaining');
+        const reset = headers.get('x-ratelimit-reset');
+
+        document.getElementById('ratelimit-used').textContent = used;
+        document.getElementById('ratelimit-remaining').textContent = remaining;
+        document.getElementById('ratelimit-reset').textContent = reset;
+    }
+>>>>>>> Stashed changes
 });

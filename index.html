@@ -5,14 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chris' Comment Search Tool</title>
     <link rel="stylesheet" href="styles.css">
-<script>
-    (function(r,y,b,bi,t){
-        r.rybbit=t=function(){(t.q=t.q||[]).push(arguments)};
-        t.apiKey='YOUR_RYBBIT_API_KEY';
-        b=y.createElement(bi);b.async=1;b.src='https://cdn.rybbit.com/rybbit.js';
-        var s=y.getElementsByTagName(bi)[0];s.parentNode.insertBefore(b,s);
-    })(window,document,'script','rybbit');
-</script>
 </head>
 <body>
     <div class="main-layout">
@@ -47,5 +39,13 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
     <script src="app.js"></script>
+    <script>
+        (function(r,y,b,bi,t){
+            r.rybbit=t=function(){(t.q=t.q||[]).push(arguments)};
+            t.apiKey='YOUR_RYBBIT_API_KEY';
+            b=y.createElement(bi);b.async=1;b.src='https://cdn.rybbit.com/rybbit.js';
+            var s=y.getElementsByTagName(bi)[0];s.parentNode.insertBefore(b,s);
+        })(window,document,'script','rybbit');
+    </script>
 </body>
 </html>
