@@ -1,4 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Pre-populate API details from localStorage
+    const clientIdInput = document.getElementById('client_id');
+    const clientSecretInput = document.getElementById('client_secret');
+    const storedClientId = localStorage.getItem('redditClientId');
+    const storedClientSecret = localStorage.getItem('redditClientSecret');
+
+    if (storedClientId) {
+        clientIdInput.value = storedClientId;
+    }
+    if (storedClientSecret) {
+        clientSecretInput.value = storedClientSecret;
+    }
+
     const authForm = document.getElementById('auth-form');
     const authContainer = document.getElementById('auth-container');
     const searchContainer = document.getElementById('search-container');
@@ -29,6 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Simulate a network request
             setTimeout(() => {
+                // Save API details to localStorage
+                localStorage.setItem('redditClientId', clientIdInput.value);
+                localStorage.setItem('redditClientSecret', clientSecretInput.value);
+
                 if (window.rybbit) {
                     rybbit.user.identify(username);
                     rybbit.track('User Info Submitted');
