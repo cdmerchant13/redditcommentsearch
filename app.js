@@ -1,7 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Pre-populate API details from localStorage
     const clientIdInput = document.getElementById('client_id');
     const clientSecretInput = document.getElementById('client_secret');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+
     const storedClientId = localStorage.getItem('redditClientId');
     const storedClientSecret = localStorage.getItem('redditClientSecret');
 
@@ -15,12 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const authForm = document.getElementById('auth-form');
     const authContainer = document.getElementById('auth-container');
     const searchContainer = document.getElementById('search-container');
+    const rateLimitContainer = document.getElementById('rate-limit-container');
     const searchBox = document.getElementById('search-box');
     const subredditFilter = document.getElementById('subreddit-filter');
     const resultsContainer = document.getElementById('results-container');
-    const usernameInput = document.getElementById('username');
-
     const loader = document.getElementById('loader');
+
+    let accessToken = null;
 
     function debounce(func, delay) {
         let timeout;
@@ -31,31 +34,56 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    authForm.addEventListener('submit', (e) => {
+    authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const clientId = clientIdInput.value;
+        const clientSecret = clientSecretInput.value;
         const username = usernameInput.value;
+        const password = passwordInput.value;
         const loginButton = authForm.querySelector('button');
 
-        if (username) {
+        if (clientId && clientSecret && username && password) {
             loginButton.disabled = true;
             loader.classList.remove('hidden');
 
-            // Simulate a network request
-            setTimeout(() => {
-                // Save API details to localStorage
-                localStorage.setItem('redditClientId', clientIdInput.value);
-                localStorage.setItem('redditClientSecret', clientSecretInput.value);
+            try {
+                const response = await fetch('https://www.reddit.com/api/v1/access_token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': 'Basic ' + btoa(clientId + ':' + clientSecret)
+                    },
+                    body: `grant_type=password&username=${username}&password=${password}`
+                });
 
-                if (window.rybbit) {
-                    rybbit.user.identify(username);
-                    rybbit.track('User Info Submitted');
+                updateRateLimitUI(response.headers);
+
+                const data = await response.json();
+
+                if (data.access_token) {
+                    accessToken = data.access_token;
+                    localStorage.setItem('redditClientId', clientId);
+                    localStorage.setItem('redditClientSecret', clientSecret);
+
+                    if (window.rybbit && window.rybbit.user) {
+                        rybbit.user.identify(username);
+                        rybbit.track('User Info Submitted');
+                    }
+
+                    authContainer.classList.add('hidden');
+                    searchContainer.classList.remove('hidden');
+                    rateLimitContainer.classList.remove('hidden');
+                    searchBox.disabled = false;
+                } else {
+                    alert('Authentication failed. Please check your credentials.');
                 }
-                authContainer.classList.add('hidden');
-                searchContainer.classList.remove('hidden');
-                searchBox.disabled = false;
+            } catch (error) {
+                console.error('Authentication error:', error);
+                alert(`An error occurred during authentication: ${error.message}. This might be due to Reddit's API requiring a User-Agent header, which browsers restrict for security. Consider using a proxy server.`);
+            } finally {
                 loader.classList.add('hidden');
                 loginButton.disabled = false;
-            }, 1500);
+            }
         }
     });
 
@@ -73,22 +101,32 @@ document.addEventListener('DOMContentLoaded', () => {
         searchComments(query, subreddit);
     }
 
-    function searchComments(query, subreddit) {
-        // Mock search function - in a real app, this would be an API call
-        console.log(`Searching for "${query}" in "r/${subreddit}"`);
-        const mockComments = [
-            { author: 'dev1', subreddit: 'webdev', body: 'Rybbit analytics seems easy to integrate.', permalink: '/r/webdev/comments/123/slug/c1' },
-            { author: 'ux_guru', subreddit: 'design', body: 'Good analytics are key for UX.', permalink: '/r/design/comments/456/slug/c2' },
-            { author: 'js_fan', subreddit: 'javascript', body: 'I wonder if Rybbit has a node.js library.', permalink: '/r/javascript/comments/789/slug/c3' }
-        ];
+    async function searchComments(query, subreddit) {
+        if (!accessToken) return;
 
-        const filteredComments = mockComments.filter(c => {
-            const queryMatch = query ? c.body.toLowerCase().includes(query.toLowerCase()) : true;
-            const subredditMatch = subreddit ? c.subreddit.toLowerCase().includes(subreddit.toLowerCase()) : true;
-            return queryMatch && subredditMatch;
-        });
+        const username = usernameInput.value;
+        try {
+            const response = await fetch(`https://oauth.reddit.com/user/${username}/comments`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
 
-        displayResults(filteredComments);
+            updateRateLimitUI(response.headers);
+
+            const data = await response.json();
+            const comments = data.data.children.map(c => c.data);
+
+            const filteredComments = comments.filter(c => {
+                const queryMatch = query ? c.body.toLowerCase().includes(query.toLowerCase()) : true;
+                const subredditMatch = subreddit ? c.subreddit.toLowerCase().includes(subreddit.toLowerCase()) : true;
+                return queryMatch && subredditMatch;
+            });
+
+            displayResults(filteredComments);
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+        }
     }
 
     function displayResults(comments) {
@@ -108,5 +146,15 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             resultsContainer.appendChild(commentElement);
         });
+    }
+
+    function updateRateLimitUI(headers) {
+        const used = headers.get('x-ratelimit-used');
+        const remaining = headers.get('x-ratelimit-remaining');
+        const reset = headers.get('x-ratelimit-reset');
+
+        document.getElementById('ratelimit-used').textContent = used;
+        document.getElementById('ratelimit-remaining').textContent = remaining;
+        document.getElementById('ratelimit-reset').textContent = reset;
     }
 });
