@@ -21,7 +21,11 @@
         </div>
         <div id="search-container" class="hidden">
             <h2>Search Comments</h2>
-            <input type="text" id="search-box" placeholder="Search your comments..." disabled>
+            <div class="filters">
+                <input type="text" id="search-box" placeholder="Search your comments..." disabled>
+                <input type="text" id="subreddit-filter" placeholder="Filter by subreddit...">
+                <button id="clear-cache">Clear Cache</button>
+            </div>
             <div id="loading" class="hidden">Loading comments...</div>
             <div id="results-container"></div>
         </div>

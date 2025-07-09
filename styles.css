@@ -27,7 +27,33 @@ h1, h2 {
     gap: 10px;
 }
 
-#auth-form input, #search-box {
+#auth-form input, #search-box, #subreddit-filter {
+    padding: 10px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+}
+
+.filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+#clear-cache {
+    padding: 10px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#clear-cache:hover {
+    background-color: #c82333;
+}
     padding: 10px;
     border: 1px solid #333;
     border-radius: 4px;

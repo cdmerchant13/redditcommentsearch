@@ -7,11 +7,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const searchBox = document.getElementById('search-box');
+    const subredditFilter = document.getElementById('subreddit-filter');
+    const clearCacheBtn = document.getElementById('clear-cache');
     const loadingDiv = document.getElementById('loading');
     const resultsContainer = document.getElementById('results-container');
 
+    let allComments = [];
     let comments = [];
     let fuse;
+    let sortColumn = null;
+    let sortDirection = 'desc';
 
     // Load saved credentials
     if (localStorage.getItem('reddit_client_id')) {
@@ -37,13 +42,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    searchBox.addEventListener('input', (e) => {
-        const query = e.target.value.trim();
-        if (query) {
-            const result = fuse.search(query);
-            displayResults(result.map(r => r.item));
-        } else {
-            displayResults(comments);
+    searchBox.addEventListener('input', () => applyFiltersAndSearch());
+    subredditFilter.addEventListener('input', () => applyFiltersAndSearch());
+
+    clearCacheBtn.addEventListener('click', () => {
+        const username = localStorage.getItem('reddit_username');
+        if (username) {
+            localStorage.removeItem(`reddit_comments_${username}`);
+            alert('Cache cleared!');
+            allComments = [];
+            comments = [];
+            displayResults([]);
+        }
+    });
+
+    resultsContainer.addEventListener('click', (e) => {
+        if (e.target.tagName === 'TH' && e.target.dataset.sort) {
+            const column = e.target.dataset.sort;
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'desc';
+            }
+            applyFiltersAndSearch();
         }
     });
 
@@ -52,9 +74,18 @@ document.addEventListener('DOMContentLoaded', () => {
         authContainer.classList.add('hidden');
         searchContainer.classList.remove('hidden');
 
+        const cacheKey = `reddit_comments_${username}`;
+        const cachedComments = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+
+        if (cachedComments) {
+            allComments = cachedComments;
+            comments = allComments;
+            applyFiltersAndSearch();
+        }
+
         try {
             const token = await getAuthToken(clientId, clientSecret, username, password);
-            let allComments = [];
+            let fetchedComments = [];
             let after = null;
 
             do {
@@ -67,9 +98,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.error) {
                     throw new Error(data.message);
                 }
-                allComments = allComments.concat(data.data.children.map(c => c.data));
+                fetchedComments = fetchedComments.concat(data.data.children.map(c => c.data));
                 after = data.data.after;
             } while (after);
+
+            // Merge and save comments
+            const commentMap = new Map(allComments.map(c => [c.id, c]));
+            fetchedComments.forEach(c => commentMap.set(c.id, c));
+            allComments = Array.from(commentMap.values());
+            localStorage.setItem(cacheKey, JSON.stringify(allComments));
 
             comments = allComments;
             fuse = new Fuse(comments, {
@@ -78,12 +115,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 threshold: 0.4
             });
             searchBox.disabled = false; // Enable search box
-            displayResults(comments);
+            applyFiltersAndSearch();
         } catch (error) {
             console.error('Error fetching comments:', error);
             alert(`Error: ${error.message}`);
-            authContainer.classList.remove('hidden');
-            searchContainer.classList.add('hidden');
+            if (!cachedComments) {
+                authContainer.classList.remove('hidden');
+                searchContainer.classList.add('hidden');
+            }
         } finally {
             loadingDiv.classList.add('hidden');
         }
@@ -105,6 +144,40 @@ document.addEventListener('DOMContentLoaded', () => {
         return data.access_token;
     }
 
+    function applyFiltersAndSearch() {
+        let filteredComments = allComments;
+
+        // Subreddit filter
+        const subredditQuery = subredditFilter.value.trim().toLowerCase();
+        if (subredditQuery) {
+            filteredComments = filteredComments.filter(c => c.subreddit.toLowerCase().includes(subredditQuery));
+        }
+
+        // Search
+        const searchQuery = searchBox.value.trim();
+        if (searchQuery) {
+            fuse.setCollection(filteredComments);
+            filteredComments = fuse.search(searchQuery).map(r => r.item);
+        } else {
+            fuse = new Fuse(filteredComments, {
+                keys: ['body'],
+                includeScore: true,
+                threshold: 0.4
+            });
+        }
+
+        // Sorting
+        if (sortColumn) {
+            filteredComments.sort((a, b) => {
+                if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1;
+                if (a[sortColumn] > b[sortColumn]) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        displayResults(filteredComments);
+    }
+
     function displayResults(results) {
         resultsContainer.innerHTML = '';
         if (results.length === 0) {
@@ -113,12 +186,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const table = document.createElement('table');
+        const sortIndicator = (column) => {
+            if (sortColumn === column) {
+                return sortDirection === 'asc' ? ' ▲' : ' ▼';
+            }
+            return '';
+        };
+
         table.innerHTML = `
             <thead>
                 <tr>
                     <th>Comment</th>
                     <th>Subreddit</th>
-                    <th>Score</th>
+                    <th data-sort="score" class="sortable">Score${sortIndicator('score')}</th>
                     <th>Link</th>
                 </tr>
             </thead>
