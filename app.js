@@ -1,29 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const clientIdInput = document.getElementById('client_id');
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    const clientSecretInput = document.getElementById('client_secret');
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
-
-    const storedClientId = localStorage.getItem('redditClientId');
-    const storedClientSecret = localStorage.getItem('redditClientSecret');
-
-    if (storedClientId) {
-        clientIdInput.value = storedClientId;
-    }
-    if (storedClientSecret) {
-        clientSecretInput.value = storedClientSecret;
-    }
-
-    const authForm = document.getElementById('auth-form');
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     const authContainer = document.getElementById('auth-container');
     const searchContainer = document.getElementById('search-container');
-    const rateLimitContainer = document.getElementById('rate-limit-container');
     const searchBox = document.getElementById('search-box');
     const subredditFilter = document.getElementById('subreddit-filter');
     const resultsContainer = document.getElementById('results-container');
@@ -35,11 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let accessToken = null;
     let allComments = [];
     let username = null;
-<<<<<<< Updated upstream
-
-    let accessToken = null;
-=======
->>>>>>> Stashed changes
 
     function debounce(func, delay) {
         let timeout;
@@ -50,70 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    authForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const clientId = clientIdInput.value;
-        const clientSecret = clientSecretInput.value;
-        const username = usernameInput.value;
-        const password = passwordInput.value;
-        const loginButton = authForm.querySelector('button');
-
-        if (clientId && clientSecret && username && password) {
-            loginButton.disabled = true;
-            loader.classList.remove('hidden');
-
-            try {
-                const response = await fetch('https://www.reddit.com/api/v1/access_token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Authorization': 'Basic ' + btoa(clientId + ':' + clientSecret)
-                    },
-                    body: `grant_type=password&username=${username}&password=${password}`
-                });
-
-                updateRateLimitUI(response.headers);
-
-                const data = await response.json();
-
-                if (data.access_token) {
-                    accessToken = data.access_token;
-                    localStorage.setItem('redditClientId', clientId);
-                    localStorage.setItem('redditClientSecret', clientSecret);
-
-                    if (window.rybbit && window.rybbit.user) {
-                        rybbit.user.identify(username);
-                        rybbit.track('User Info Submitted');
-                    }
-
-                    authContainer.classList.add('hidden');
-                    searchContainer.classList.remove('hidden');
-                    rateLimitContainer.classList.remove('hidden');
-                    searchBox.disabled = false;
-                } else {
-                    alert('Authentication failed. Please check your credentials.');
-                }
-            } catch (error) {
-                console.error('Authentication error:', error);
-                alert(`An error occurred during authentication: ${error.message}. This might be due to Reddit's API requiring a User-Agent header, which browsers restrict for security. Consider using a proxy server.`);
-            } finally {
-                loader.classList.add('hidden');
-                loginButton.disabled = false;
-            }
-=======
-=======
->>>>>>> Stashed changes
     function handleRedditLogin() {
         const clientId = clientIdInput.value;
         if (!clientId) {
             alert('Please enter your Reddit Client ID.');
             return;
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
         }
         localStorage.setItem('redditClientId', clientId);
         const state = Math.random().toString(36).substring(7);
@@ -122,15 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = authUrl;
     }
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    async function searchComments(query, subreddit) {
-        if (!accessToken) return;
-
-        const username = usernameInput.value;
-        try {
-            const response = await fetch(`https://oauth.reddit.com/user/${username}/comments`, {
-=======
     async function handleAuthentication() {
         const hash = window.location.hash.substring(1);
         const params = new URLSearchParams(hash);
@@ -160,37 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchUserIdentity() {
         if (!accessToken) return;
         try {
-=======
-    async function handleAuthentication() {
-        const hash = window.location.hash.substring(1);
-        const params = new URLSearchParams(hash);
-        if (params.has('access_token')) {
-            accessToken = params.get('access_token');
-            const state = params.get('state');
-            const storedState = localStorage.getItem('redditAuthState');
-            if (state === storedState) {
-                localStorage.setItem('redditAccessToken', accessToken);
-                authContainer.classList.add('hidden');
-                searchContainer.classList.remove('hidden');
-                window.location.hash = '';
-                await fetchUserIdentity();
-                fetchComments();
-            } else {
-                alert('Invalid state parameter. Please try logging in again.');
-            }
-        } else if (localStorage.getItem('redditAccessToken')) {
-            accessToken = localStorage.getItem('redditAccessToken');
-            authContainer.classList.add('hidden');
-            searchContainer.classList.remove('hidden');
-            await fetchUserIdentity();
-            fetchComments();
-        }
-    }
-
-    async function fetchUserIdentity() {
-        if (!accessToken) return;
-        try {
->>>>>>> Stashed changes
             const response = await fetch('https://oauth.reddit.com/api/v1/me', {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
@@ -215,10 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const response = await fetch(url, {
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }
@@ -245,16 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error fetching comments:', error);
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-        }
-=======
             loader.classList.add('hidden');
         }
-=======
-            loader.classList.add('hidden');
-        }
->>>>>>> Stashed changes
     }
 
     function populateFilters() {
@@ -266,10 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
             option.value = sub;
             datalist.appendChild(option);
         });
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     }
 
     function displayResults(comments) {
@@ -290,47 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
             resultsContainer.appendChild(commentElement);
         });
     }
-<<<<<<< Updated upstream
-
-    function triggerSearch() {
-        const query = searchBox.value.toLowerCase();
-        const subreddit = subredditFilter.value.toLowerCase();
-        
-        let filteredComments = allComments;
-
-        if (subreddit) {
-            filteredComments = filteredComments.filter(c => c.subreddit.toLowerCase() === subreddit);
-        }
-
-        if (query) {
-            const fuse = new Fuse(filteredComments, { keys: ['body'], includeScore: true, threshold: 0.4 });
-            filteredComments = fuse.search(query).map(result => result.item);
-        }
-
-        displayResults(filteredComments);
-    }
-<<<<<<< Updated upstream
-});
-=======
-
-    function clearCache() {
-        localStorage.removeItem('redditAccessToken');
-        localStorage.removeItem('redditComments');
-        localStorage.removeItem('redditClientId');
-        localStorage.removeItem('redditAuthState');
-        localStorage.removeItem('redditUsername');
-        allComments = [];
-        accessToken = null;
-        username = null;
-        authContainer.classList.remove('hidden');
-        searchContainer.classList.add('hidden');
-        resultsContainer.innerHTML = '';
-        clientIdInput.value = '';
-        searchBox.value = '';
-        subredditFilter.value = '';
-    }
-
-=======
 
     function triggerSearch() {
         const query = searchBox.value.toLowerCase();
@@ -367,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
         subredditFilter.value = '';
     }
 
->>>>>>> Stashed changes
     loginButton.addEventListener('click', handleRedditLogin);
     clearCacheButton.addEventListener('click', clearCache);
     searchBox.addEventListener('input', debounce(triggerSearch, 300));
@@ -378,9 +194,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load client ID from local storage
     clientIdInput.value = localStorage.getItem('redditClientId') || '';
-<<<<<<< Updated upstream
 });
->>>>>>> Stashed changes
-=======
-});
->>>>>>> Stashed changes
