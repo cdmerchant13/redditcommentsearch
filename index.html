@@ -20,20 +20,16 @@
             <h1>Chris' Reddit Comment Search</h1>
             <div id="auth-container">
                 <h2>Authentication</h2>
-                <form id="auth-form">
-                    <input type="text" id="client_id" placeholder="Client ID" required>
-                    <input type="password" id="client_secret" placeholder="Client Secret" required>
-                    <input type="text" id="username" placeholder="Username" required>
-                    <input type="password" id="password" placeholder="Password" required>
-                    <button type="submit">QUERY DAT HISTORY!</button>
-                </form>
+                <input type="text" id="client_id" placeholder="Enter your Reddit Client ID" required>
+                <button id="login-button">Login with Reddit</button>
             </div>
             <div id="search-container" class="hidden">
                 <h2>Search Comments</h2>
                 <div class="filters">
-                    <input type="text" id="search-box" placeholder="Search your comments..." disabled>
-                    <input type="text" id="subreddit-filter" placeholder="Filter by subreddit...">
-                    <button id="clear-cache">Clear Cache</button>
+                    <input type="text" id="search-box" placeholder="Search your comments...">
+                    <input type="text" id="subreddit-filter" placeholder="Filter by subreddit..." list="subreddit-list">
+                    <datalist id="subreddit-list"></datalist>
+                    <button id="clear-cache">Clear Cache & Logout</button>
                 </div>
             </div>
             <div id="rate-limit-container" class="hidden">
@@ -47,7 +43,6 @@
             <div id="loader" class="hidden">
                 <div class="spinner"></div>
             </div>
-            <div id="loading" class="hidden">Loading comments...</div>
             <div id="results-container"></div>
         </div>
     </div>

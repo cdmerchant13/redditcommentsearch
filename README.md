@@ -8,13 +8,12 @@ I got tired of Reddit's half-baked search tools. You know the ones—painfully s
 
 ##  What It Does
 
-- Authenticates via Reddit's **OAuth2 API** (you paste in your token info)
+- Authenticates via Reddit's **OAuth2 API** using the implicit grant flow.
 - Fetches **your entire comment history**
 - Stores it in **localStorage** to speed up future sessions
 - Lets you:
   - 🔍 **Search** comments (with fuzzy match via Fuse.js)
   - 🧵 **Filter by subreddit**
-  - 🔢 **Sort by upvotes** (ascending or descending)
   - 🧹 **Clear cached data** anytime
 
 All processing happens **locally in your browser**. Your credentials and comment history never leave your machine.
@@ -29,15 +28,21 @@ Because Reddit’s search is allergic to usefulness, and I wanted a fast, privat
 
 ##  Getting Started
 
-1. [Create a Reddit app](https://www.reddit.com/prefs/apps) with "script" access
-2. Grab your:
-   - `client_id`
-   - `client_secret`
-   - Reddit `username`
-   - Reddit `password`
-3. Paste them into the form on the page
-4. Hit **Fetch Comments**
-5. Search and filter to your heart’s content
+1. **Create a Reddit App:**
+   - Go to [https://www.reddit.com/prefs/apps](https://www.reddit.com/prefs/apps).
+   - Click "are you a developer? create an app...".
+   - Give it a name (e.g., "My Comment Search").
+   - Select **"installed app"**.
+   - For the **"redirect uri"**, enter the URL where you will be hosting the `index.html` file. If you are running it locally, you can use `http://127.0.0.1:5500/index.html` (or whatever port you are using). If you are hosting it on GitHub pages, it will be something like `https://<your-username>.github.io/<your-repo-name>/`.
+   - Click "create app".
+2. **Get your Client ID:**
+   - After creating the app, you will see your **client ID** under the app name.
+3. **Use the Tool:**
+   - Open the `index.html` file in your browser.
+   - Paste your **client ID** into the input box.
+   - Click "Login with Reddit".
+   - You will be redirected to Reddit to authorize the application.
+   - After authorizing, you will be redirected back to the tool and your comments will be fetched.
 
 ---
 
@@ -45,16 +50,17 @@ Because Reddit’s search is allergic to usefulness, and I wanted a fast, privat
 
 - Vanilla **HTML/CSS/JS**
 - **Fuse.js** for fuzzy search
-- **Reddit API** with OAuth2 `password` grant flow
+- **Reddit API** with OAuth2 `implicit` grant flow
 - Fully static: works on GitHub Pages or anywhere you can host an `index.html`
 
 ---
 
 ##  Privacy Notes
 
-- Your credentials are only sent directly to Reddit to get a token
-- Comments are cached locally with `localStorage`
-- You can clear the cache any time using the "Clear Cache" button
+- Your client ID is stored in `localStorage` for convenience.
+- Your OAuth2 access token is stored in `localStorage` to avoid having to log in every time.
+- Comments are cached locally with `localStorage`.
+- You can clear all cached data at any time using the "Clear Cache & Logout" button.
 
 ---
 
@@ -63,8 +69,9 @@ Because Reddit’s search is allergic to usefulness, and I wanted a fast, privat
 This site is 100% static and deploys via GitHub Pages.  
 To try it yourself:
 - Fork the repo
-- Enable Pages in the repo settings
-- Or just open `index.html` locally in a browser
+- Follow the "Getting Started" instructions to create your own Reddit app and get a client ID.
+- Enable Pages in the repo settings.
+- Or just open `index.html` locally in a browser.
 - Also runs here: https://cdmerchant13.github.io/redditcommentsearch/
 ---
 
